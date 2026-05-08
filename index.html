@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Sistema Escolar</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+<header class="header">
+  <div class="header-content">
+    <h1>Sistema Escolar</h1>
+    <span>Painel de Gestão de Alunos</span>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="toolbar">
+    <button class="btn primary" onclick="abrirModal()">Novo Aluno</button>
+
+    <select>
+      <option>Todas as turmas</option>
+      <option>1A</option>
+      <option>2A</option>
+      <option>3A</option>
+    </select>
+  </div>
+
+  <section class="card">
+
+    <div class="card-header">
+      <h2>Alunos cadastrados</h2>
+      <span class="badge"><?= count($alunos) ?> registros</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>RA</th>
+          <th>Nome</th>
+          <th>Email</th>
+          <th>Turma</th>
+          <th></th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+      <?php foreach($alunos as $a): ?>
+        <tr>
+          <td><?= $a["RA"] ?></td>
+          <td class="strong"><?= $a["Nome"] ?></td>
+          <td><?= $a["Email"] ?></td>
+          <td><span class="tag"><?= $a["Turma"] ?></span></td>
+          <td>
+            <form method="POST" action="/alunos/<?= $a["RA"] ?>" onsubmit="return confirmar()">
+              <input type="hidden" name="_method" value="DELETE">
+              <button class="btn danger small">Excluir</button>
+            </form>
+          </td>
+        </tr>
+      <?php endforeach; ?>
+
+      </tbody>
+    </table>
+
+  </section>
+
+</main>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+
+    <div class="modal-header">
+      <h3>Novo aluno</h3>
+      <button onclick="fecharModal()">×</button>
+    </div>
+
+    <form method="POST" action="/alunos" class="form">
+
+      <input name="nome" placeholder="Nome completo" required>
+      <input name="email" placeholder="Email" required>
+      <input name="dataNascimento" type="date" required>
+
+      <select name="turma" required>
+        <option value="">Selecionar turma</option>
+        <option>1A</option>
+        <option>2A</option>
+        <option>3A</option>
+      </select>
+
+      <div class="form-actions">
+        <button class="btn primary">Salvar</button>
+        <button type="button" class="btn ghost" onclick="fecharModal()">Cancelar</button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+<script>
+function abrirModal() {
+  document.getElementById("modal").style.display = "flex";
+}
+
+function fecharModal() {
+  document.getElementById("modal").style.display = "none";
+}
+
+function confirmar() {
+  return confirm("Tem certeza que deseja excluir este aluno?");
+}
+</script>
+
+</body>
+</html>
