@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escola API — Alunos</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --success: #4ade80;
+    --error: #f87171;
+    --warning: #fbbf24;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* Navbar */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+  }
+
+  .nav-brand span {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .nav-user {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .nav-user strong { color: var(--text); }
+
+  .btn-logout {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    padding: 6px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-logout:hover { border-color: var(--error); color: var(--error); }
+
+  /* Main */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .page-header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+  }
+
+  .page-header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    padding: 10px 20px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary:hover { opacity: 0.9; }
+
+  /* Alert */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 24px;
+    display: none;
+  }
+
+  .alert.error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--error); }
+  .alert.success { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: var(--success); }
+  .alert.show { display: block; }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+  }
+
+  .stat-card .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card .stat-value { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; margin-top: 6px; }
+  .stat-card .stat-value.purple { color: var(--accent); }
+  .stat-card .stat-value.pink { color: var(--accent2); }
+  .stat-card .stat-value.green { color: var(--success); }
+
+  /* Tabela */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .table-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .table-header h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+
+  .search-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    width: 220px;
+    transition: border-color 0.2s;
+  }
+
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead th {
+    padding: 14px 24px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+
+  tbody td {
+    padding: 16px 24px;
+    font-size: 14px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(108,99,255,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(108,99,255,0.3);
+  }
+
+  .actions { display: flex; gap: 8px; }
+
+  .btn-edit, .btn-delete {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity 0.2s;
+  }
+
+  .btn-edit { background: rgba(108,99,255,0.15); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); }
+  .btn-delete { background: rgba(248,113,113,0.15); color: var(--error); border: 1px solid rgba(248,113,113,0.3); }
+  .btn-edit:hover, .btn-delete:hover { opacity: 0.7; }
+
+  .empty {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--muted);
+  }
+
+  .empty .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty p { font-size: 15px; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px;
+    width: 100%;
+    max-width: 460px;
+    transform: translateY(20px);
+    transition: transform 0.2s;
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .modal-header h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
+
+  .btn-close {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+  }
+
+  .btn-close:hover { color: var(--text); }
+
+  .field { margin-bottom: 16px; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  input, select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  select option { background: var(--surface2); }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,99,255,0.15); }
+  input::placeholder { color: var(--muted); }
+
+  .modal-footer {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .btn-cancel {
+    flex: 1;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+
+  .btn-save {
+    flex: 2;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .btn-save:hover { opacity: 0.9; }
+  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .loading { text-align: center; padding: 40px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <span>🎓</span>
+    Escola API
+  </div>
+  <div class="nav-right">
+    <div class="nav-user">Olá, <strong id="nomeUsuario">...</strong></div>
+    <button class="btn-logout" onclick="logout()">Sair</button>
+  </div>
+</nav>
+
+<main>
+  <div class="page-header">
+    <div>
+      <h1>Alunos</h1>
+      <p>Gerencie os alunos cadastrados</p>
+    </div>
+    <button class="btn-primary" onclick="abrirModal()">
+      + Novo Aluno
+    </button>
+  </div>
+
+  <div class="alert" id="alert"></div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Total de Alunos</div>
+      <div class="stat-value purple" id="totalAlunos">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Turmas</div>
+      <div class="stat-value pink" id="totalTurmas">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Sistema</div>
+      <div class="stat-value green">Online</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header">
+      <h3>Lista de Alunos</h3>
+      <input class="search-input" type="text" placeholder="Buscar aluno..." oninput="filtrar(this.value)">
+    </div>
+
+    <div id="tableContent">
+      <div class="loading">Carregando...</div>
+    </div>
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Novo Aluno</h3>
+      <button class="btn-close" onclick="fecharModal()">✕</button>
+    </div>
+
+    <input type="hidden" id="alunoRA">
+
+    <div class="field">
+      <label>Nome completo</label>
+      <input type="text" id="alunoNome" placeholder="Nome do aluno">
+    </div>
+
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="alunoEmail" placeholder="email@exemplo.com">
+    </div>
+
+    <div class="field">
+      <label>Data de Nascimento</label>
+      <input type="date" id="alunoData">
+    </div>
+
+    <div class="field">
+      <label>Turma</label>
+      <input type="text" id="alunoTurma" placeholder="Ex: 1-A, 2-B">
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-save" id="btnSalvar" onclick="salvarAluno()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost/escola-api';
+  let todosAlunos = [];
+
+  // Verifica login
+  const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+  if (!usuario) window.location.href = 'login.html';
+  document.getElementById('nomeUsuario').textContent = usuario?.nome || '';
+
+  function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.textContent = msg;
+    el.className = `alert ${type} show`;
+    setTimeout(() => el.className = 'alert', 4000);
+  }
+
+  async function carregarAlunos() {
+    try {
+      const res  = await fetch(`${API}/alunos`, { credentials: 'include' });
+      const data = await res.json();
+
+      if (data.sucesso) {
+        todosAlunos = data.dados;
+        renderTabela(todosAlunos);
+        document.getElementById('totalAlunos').textContent = data.total;
+        const turmas = [...new Set(data.dados.map(a => a.turma))];
+        document.getElementById('totalTurmas').textContent = turmas.length;
+      } else {
+        if (res.status === 401) window.location.href = 'login.html';
+      }
+    } catch (e) {
+      document.getElementById('tableContent').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div><p>Erro ao conectar com a API</p></div>';
+    }
+  }
+
+  function renderTabela(alunos) {
+    const el = document.getElementById('tableContent');
+
+    if (alunos.length === 0) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">👨‍🎓</div><p>Nenhum aluno encontrado</p></div>';
+      return;
+    }
+
+    el.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>RA</th>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Nascimento</th>
+            <th>Turma</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${alunos.map(a => `
+            <tr>
+              <td><strong>#${a.RA}</strong></td>
+              <td>${a.nome}</td>
+              <td style="color: var(--muted)">${a.email}</td>
+              <td>${formatarData(a.dataNascimento)}</td>
+              <td><span class="badge">${a.turma}</span></td>
+              <td>
+                <div class="actions">
+                  <button class="btn-edit" onclick="editarAluno(${a.RA})">Editar</button>
+                  <button class="btn-delete" onclick="deletarAluno(${a.RA}, '${a.nome}')">Excluir</button>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function formatarData(data) {
+    if (!data) return '—';
+    const [y, m, d] = data.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  function filtrar(termo) {
+    const filtrados = todosAlunos.filter(a =>
+      a.nome.toLowerCase().includes(termo.toLowerCase()) ||
+      a.email.toLowerCase().includes(termo.toLowerCase()) ||
+      a.turma.toLowerCase().includes(termo.toLowerCase())
+    );
+    renderTabela(filtrados);
+  }
+
+  function abrirModal(aluno = null) {
+    document.getElementById('modalTitle').textContent = aluno ? 'Editar Aluno' : 'Novo Aluno';
+    document.getElementById('alunoRA').value    = aluno?.RA || '';
+    document.getElementById('alunoNome').value  = aluno?.nome || '';
+    document.getElementById('alunoEmail').value = aluno?.email || '';
+    document.getElementById('alunoData').value  = aluno?.dataNascimento || '';
+    document.getElementById('alunoTurma').value = aluno?.turma || '';
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function fecharModal() {
+    document.getElementById('modal').classList.remove('open');
+  }
+
+  async function editarAluno(ra) {
+    const aluno = todosAlunos.find(a => a.RA == ra);
+    if (aluno) abrirModal(aluno);
+  }
+
+  async function salvarAluno() {
+    const ra    = document.getElementById('alunoRA').value;
+    const nome  = document.getElementById('alunoNome').value.trim();
+    const email = document.getElementById('alunoEmail').value.trim();
+    const data  = document.getElementById('alunoData').value;
+    const turma = document.getElementById('alunoTurma').value.trim();
+    const btn   = document.getElementById('btnSalvar');
+
+    if (!nome || !email || !data || !turma) {
+      showAlert('Preencha todos os campos.', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    const isEdit = !!ra;
+    const url    = isEdit ? `${API}/alunos/${ra}` : `${API}/alunos`;
+    const method = isEdit ? 'PUT' : 'POST';
+
+    try {
+      const res  = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ nome, email, dataNascimento: data, turma })
+      });
+
+      const result = await res.json();
+
+      if (result.sucesso) {
+        showAlert(isEdit ? 'Aluno atualizado!' : 'Aluno cadastrado!', 'success');
+        fecharModal();
+        carregarAlunos();
+      } else {
+        showAlert(result.mensagem, 'error');
+      }
+    } catch (e) {
+      showAlert('Erro ao salvar aluno.', 'error');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Salvar';
+  }
+
+  async function deletarAluno(ra, nome) {
+    if (!confirm(`Deseja excluir o aluno "${nome}"?`)) return;
+
+    try {
+      const res  = await fetch(`${API}/alunos/${ra}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      const data = await res.json();
+
+      if (data.sucesso) {
+        showAlert('Aluno removido com sucesso!', 'success');
+        carregarAlunos();
+      } else {
+        showAlert(data.mensagem, 'error');
+      }
+    } catch (e) {
+      showAlert('Erro ao excluir aluno.', 'error');
+    }
+  }
+
+  async function logout() {
+    await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' });
+    localStorage.removeItem('usuario');
+    window.location.href = 'login.html';
+  }
+
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) fecharModal();
+  });
+
+  carregarAlunos();
+</script>
+</body>
+</html>
